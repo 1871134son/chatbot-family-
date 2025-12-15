@@ -99,7 +99,7 @@ def get_system_instruction(user):
 if "chat_session" not in st.session_state or st.session_state.chat_session is None:
     # [수정] gemini-pro 대신 다시 gemini-1.5-flash로 변경! (이제 됩니다)
     try:
-        model = genai.GenerativeModel("gemini-pro", system_instruction=get_system_instruction(selected_user))
+        model = genai.GenerativeModel("gemini-1.5-flash", system_instruction=get_system_instruction(selected_user))
         st.session_state.chat_session = model.start_chat(history=[])
         
         greeting = f"{user_name}님! 오늘도 행복한 하루 보내세요 🍀"
