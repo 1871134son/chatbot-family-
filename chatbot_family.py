@@ -13,45 +13,58 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 배경 이미지 설정 (에러나도 멈추지 않게 방어막 설치)
+# 2. 배경 이미지 설정 (업그레이드 버전: 반투명 + 중앙 + 50%크기)
 # ==========================================
 def set_bg(image_file):
     # 파일이 있는지 먼저 검사
     if not os.path.exists(image_file):
         st.error(f"⚠️ 경고: '{image_file}' 파일이 GitHub에 없습니다. 배경 없이 실행합니다.")
-        return # 파일 없으면 그냥 여기서 끝내고 아래 코드 계속 실행
+        return 
 
     with open(image_file, "rb") as f:
         data = f.read()
     b64 = base64.b64encode(data).decode()
     
-    # CSS 스타일 주입
+    # CSS 스타일 주입 (가상 요소 ::before 사용)
     page_bg_img = f'''
     <style>
-    .stApp {{
+    /* 배경 이미지를 투명하게 만들기 위한 가상 레이어 */
+    .stApp::before {{
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1; /* 글자 뒤로 보내기 */
+        
         background-image: url("data:image/jpeg;base64,{b64}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
+        background-size: 50% auto; /* [요청] 크기 50%로 축소 */
+        background-position: center center; /* [요청] 화면 정가운데 배치 */
+        background-repeat: no-repeat; /* 반복 안 함 */
+        opacity: 0.5; /* [요청] 투명도 50% (반투명) */
     }}
-    /* 가독성을 위해 채팅창 배경을 반투명 흰색으로 */
+    
+    /* 채팅창 스타일 (배경이 잘 보이게 투명도 조절) */
     .stChatMessage {{
         background-color: rgba(255, 255, 255, 0.85);
         border-radius: 15px;
         padding: 15px;
         margin-bottom: 10px;
     }}
+    
+    /* (선택) 지저분한 메뉴 숨기기 */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
     </style>
     '''
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# [실행] 여기서 배경을 입힙니다.
-# (파일 이름이 정확해야 합니다. 대소문자 주의!)
+# [실행] family.jpg 적용
 set_bg('family.jpg') 
 
 # ==========================================
-# 3. 사이드바 (가족 선택) - 이제 무조건 뜹니다
+# 3. 사이드바 (가족 선택)
 # ==========================================
 with st.sidebar:
     st.title("👨‍👩‍👦‍👦 가족 선택")
@@ -63,35 +76,32 @@ with st.sidebar:
         index=0
     )
     
-    # [진단용] 파일 목록 보여주기 (나중에 삭제 가능)
+    # [진단용] (성공했으니 이제 필요 없으면 지워도 됩니다)
     st.divider()
-    st.caption("🔍 서버 파일 상태 확인")
+    st.caption("서버 상태 확인")
     if os.path.exists("family.jpg"):
-        st.success("이미지 파일 있음 (O)")
+        st.success("배경 이미지 준비 완료 (O)")
     else:
         st.error("이미지 파일 없음 (X)")
-        st.write("현재 파일들:", os.listdir())
 
 # ==========================================
-# 4. 사용자 변경 시 기억 리셋 (로직)
+# 4. 사용자 변경 시 기억 리셋
 # ==========================================
 if "current_user" not in st.session_state:
     st.session_state.current_user = selected_user
 
 if st.session_state.current_user != selected_user:
-    st.session_state.messages = [] # 대화 내용 지우기
-    st.session_state.chat_session = None # 뇌 초기화
+    st.session_state.messages = [] 
+    st.session_state.chat_session = None 
     st.session_state.current_user = selected_user
-    st.rerun() # 화면 새로고침
+    st.rerun() 
 
 # ==========================================
 # 5. AI 성격 설정 & API 연결
 # ==========================================
-# API 키 가져오기 (Secrets 또는 로컬)
 if "MY_API_KEY" in st.secrets:
     MY_API_KEY = st.secrets["MY_API_KEY"]
 else:
-    # 로컬 테스트 할 때만 쓰이는 가짜 키 (배포 시엔 무시됨)
     MY_API_KEY = "테스트키" 
 
 try:
@@ -99,7 +109,6 @@ try:
 except:
     st.error("API 키가 설정되지 않았습니다. Secrets를 확인해주세요.")
 
-# 가족별 페르소나 정의
 def get_system_instruction(user):
     base = "너는 이 가족을 끔찍이 아끼는 AI 비서야. 한국어로 따뜻하고 자연스럽게 대답해."
     
@@ -122,7 +131,7 @@ def get_system_instruction(user):
         [말투] 친근한 형/누나처럼 반존대(~했어? ~하자). "준호야, 너 잘하고 있어"라고 자존감을 높여줄 것.
         """
 
-# 모델 로딩 및 채팅 세션 시작
+# 모델 로딩
 if "chat_session" not in st.session_state or st.session_state.chat_session is None:
     instruction = get_system_instruction(selected_user)
     try:
@@ -144,12 +153,10 @@ if "chat_session" not in st.session_state or st.session_state.chat_session is No
 # ==========================================
 st.title(f"{selected_user.split('(')[0]} 전용 상담소 💬")
 
-# 이전 대화 출력
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# 입력창
 if prompt := st.chat_input("하고 싶은 말을 입력하세요..."):
     with st.chat_message("user"):
         st.write(prompt)
