@@ -13,44 +13,38 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 배경 이미지 설정 (안전한 Overlay 방식)
+# 2. 배경 이미지 설정 (Overlay 방식)
 # ==========================================
 def set_bg(image_file):
     if not os.path.exists(image_file):
-        st.error(f"⚠️ '{image_file}' 파일이 없습니다. GitHub에 올렸는지 확인해주세요.")
+        st.error(f"⚠️ '{image_file}' 파일이 없습니다.")
         return 
 
     with open(image_file, "rb") as f:
         data = f.read()
     b64 = base64.b64encode(data).decode()
     
-    # [핵심 변경] ::before 같은 거 안 씁니다. 가장 직관적인 CSS 사용.
-    # linear-gradient: 이미지 위에 50% 투명한 흰색을 덧칠해서 연하게 만듭니다.
     page_bg_img = f'''
     <style>
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url("data:image/jpeg;base64,{b64}");
-        background-size: 50%; /* [요청] 크기 절반 */
-        background-position: center center; /* [요청] 정가운데 */
+        background-size: 50%;
+        background-position: center center;
         background-repeat: no-repeat;
         background-attachment: fixed;
     }}
-    
-    /* 채팅창 스타일 */
     .stChatMessage {{
         background-color: rgba(255, 255, 255, 0.8);
         border-radius: 15px;
         padding: 15px;
         margin-bottom: 10px;
     }}
-    
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     </style>
     '''
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# [실행]
 set_bg('family.jpg') 
 
 # ==========================================
@@ -63,6 +57,9 @@ with st.sidebar:
         ("아버지 (손기혁)", "어머니 (김영숙)", "막내 (손준호)"),
         index=0
     )
+
+# 이름 추출 로직 (손기혁, 김영숙, 손준호)
+user_name = selected_user.split('(')[1].replace(')', '')
 
 # ==========================================
 # 4. 사용자 변경 시 리셋
@@ -91,25 +88,29 @@ except:
 
 def get_system_instruction(user):
     base = "너는 이 가족을 끔찍이 아끼는 AI 비서야. 한국어로 따뜻하게 대답해."
-    if user == "아버지 (손기혁)":
-        return base + " (대상: 71년생 부친, 국방과학연구소, 암투병, 시 문학, 존댓말)"
-    elif user == "어머니 (김영숙)":
-        return base + " (대상: 71년생 모친, 어린이집 교사, 감수성, 요리/건강, 공감 대화)"
+    if "손기혁" in user:
+        return base + " (대상: 손기혁님 - 71년생 부친, 국방과학연구소, 암투병, 시 문학, 존댓말)"
+    elif "김영숙" in user:
+        return base + " (대상: 김영숙님 - 71년생 모친, 어린이집 교사, 감수성, 요리/건강, 공감 대화)"
     else:
-        return base + " (대상: 03년생 남동생, 보안전공, 재테크, 멘탈케어, 반존대)"
+        return base + " (대상: 손준호님 - 03년생 남동생, 보안전공, 재테크, 멘탈케어, 반존대)"
 
 # 모델 로딩
 if "chat_session" not in st.session_state or st.session_state.chat_session is None:
-    model = genai.GenerativeModel("gemini-1.5-flash", system_instruction=get_system_instruction(selected_user))
-    st.session_state.chat_session = model.start_chat(history=[])
-    
-    greeting = f"{selected_user.split('(')[0]}님! 오늘도 행복하세요 🍀"
-    st.session_state.messages = [{"role": "assistant", "content": greeting}]
+    # [수정완료] gemini-1.5-flash -> gemini-pro (안정적인 모델로 변경)
+    try:
+        model = genai.GenerativeModel("gemini-pro", system_instruction=get_system_instruction(selected_user))
+        st.session_state.chat_session = model.start_chat(history=[])
+        
+        greeting = f"{user_name}님! 오늘도 행복한 하루 보내세요 🍀"
+        st.session_state.messages = [{"role": "assistant", "content": greeting}]
+    except Exception as e:
+        st.error(f"모델 연결 실패: {e}")
 
 # ==========================================
 # 6. 채팅 화면
 # ==========================================
-st.title(f"{selected_user.split('(')[0]} 전용 상담소 💬")
+st.title(f"{user_name}님 전용 상담소 💬")
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -127,4 +128,4 @@ if prompt := st.chat_input("메시지를 입력하세요..."):
                 st.write(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"오류 발생: {e}")
