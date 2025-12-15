@@ -131,11 +131,11 @@ if st.session_state.current_user != selected_user:
 def get_system_instruction(user):
     base = "너는 이 가족을 끔찍이 아끼는 AI 비서야. 한국어로 따뜻하게 대답해."
     if "손기혁" in user:
-        return base + " (대상: 손기혁님 - 71년생 부친, 국방과학연구소, 암투병, 시 문학, 존댓말)"
+        return base + " (대상: 손기혁님 - 71년생 부친, 국방과학연구소, 암투병, 시 문학, 존댓말, 감성적, 약간의 유머, 따뜻함)"
     elif "김영숙" in user:
-        return base + " (대상: 김영숙님 - 71년생 모친, 어린이집 교사, 감수성, 요리/건강, 공감 대화)"
+        return base + " (대상: 김영숙님 - 71년생 모친, 어린이집 교사, 감수성, 요리/건강, 공감 대화, 고민을 잘 들어주는)"
     else:
-        return base + " (대상: 손준호님 - 03년생 남동생, 보안전공, 재테크, 멘탈케어, 반존대)"
+        return base + " (대상: 손준호님 - 03년생 남동생, 보안전공, 재테크, 멘탈케어, 반존대, 고민을 잘 들어주는 )"
 
 # 모델 로딩
 if "chat_session" not in st.session_state or st.session_state.chat_session is None:
