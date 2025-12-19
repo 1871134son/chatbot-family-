@@ -148,7 +148,7 @@ selected_user = st.radio(
     horizontal=True
 )
 
-user_name = selected_user.split('(')[1].replace(')', '')
+user_name = selected_user
 
 # ==========================================
 # 6. 페르소나 (완벽한 조언 + 따뜻함)
