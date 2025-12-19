@@ -143,7 +143,7 @@ st.markdown("<h2 style='text-align: center; color: white; text-shadow: 2px 2px 4
 
 selected_user = st.radio(
     "가족 선택",
-    ("아버지 (손기혁)", "어머니 (김영숙)", "막내 (손준호)"),
+    ("손기혁", "김영숙", "손준호"),
     index=0,
     horizontal=True
 )
