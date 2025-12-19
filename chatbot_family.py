@@ -49,7 +49,7 @@ def find_best_model():
         return None
 
 # ==========================================
-# 4. [UI 디자인] 파스텔톤 & 모바일 최적화
+# 4. [UI 디자인] 텍스트 가독성 강화
 # ==========================================
 @st.cache_data
 def get_base64_image(image_file):
@@ -62,24 +62,22 @@ def get_base64_image(image_file):
 def set_style(image_file):
     b64 = get_base64_image(image_file)
     
-    # 배경: 이미지 있으면 사용, 없으면 '파스텔 블루'
     if b64:
         bg_css = f"""
-            background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url("data:image/jpeg;base64,{b64}");
+            background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url("data:image/jpeg;base64,{b64}");
             background-size: cover;
         """
     else:
-        bg_css = "background-color: #dbe4f0;" # 눈 편한 파스텔 블루
+        bg_css = "background-color: #dbe4f0;"
 
     css = f"""
     <style>
-    /* 1. 폰트 적용 (주아체) */
+    /* 1. 기본 폰트 설정 */
     html, body, [class*="css"] {{
         font-family: 'Jua', sans-serif !important;
-        color: #333333 !important;
     }}
 
-    /* 2. 배경 설정 */
+    /* 2. 배경 설정 (이미지 어둡게 처리해서 글씨 더 잘 보이게) */
     [data-testid="stAppViewContainer"] {{
         {bg_css}
         background-position: center;
@@ -87,34 +85,50 @@ def set_style(image_file):
         background-attachment: fixed;
     }}
     
-    /* 3. 헤더/푸터 숨김 */
+    /* 3. 헤더 숨김 */
     header {{visibility: hidden;}}
     footer {{visibility: hidden;}}
 
-    /* 4. 말풍선 디자인 (흰색 카드 + 그림자) */
+    /* 4. 채팅 말풍선 (흰색 배경 + 검은 글씨) */
     [data-testid="stChatMessage"] {{
-        background-color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.95) !important;
         border-radius: 20px !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
         padding: 15px !important;
         margin-bottom: 10px !important;
         border: none !important;
     }}
 
-    /* 5. 말풍선 글씨 (가독성 확보) */
+    /* 채팅방 안의 글씨는 검은색 (잘 보여야 하니까) */
     [data-testid="stChatMessage"] * {{
-        color: #4a4a4a !important;
+        color: #333333 !important;
         font-size: 1.1rem !important;
         line-height: 1.5 !important;
+        text-shadow: none !important; /* 말풍선 안에는 그림자 끔 */
     }}
     
-    /* 6. [NEW] 상단 선택 버튼 꾸미기 */
-    div[class*="stRadio"] > label {{
-        display: none; /* 라벨 숨김 */
+    /* 5. [핵심 수정] 사용자 선택 버튼 (라디오 버튼) 스타일 */
+    div[class*="stRadio"] label p {{
+        color: #ffffff !important; /* 글씨 흰색 */
+        font-size: 1.3rem !important; /* 글씨 크기 키움 */
+        font-weight: bold !important;
+        text-shadow: 2px 2px 4px #000000 !important; /* 검은 그림자 빡! */
     }}
+
+    /* 라디오 버튼 주변에 살짝 어두운 배경 깔기 */
     div[row-widget="radio"] {{
+        background-color: rgba(0, 0, 0, 0.2); /* 반투명 검은 배경 */
+        border-radius: 15px;
+        padding: 10px;
         justify-content: center;
     }}
+    
+    /* 라디오 버튼 선택된 동그라미 색상 */
+    div[class*="stRadio"] div[role="radiogroup"] > label > div:first-child {{
+        background-color: white !important;
+        border-color: white !important;
+    }}
+
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -122,25 +136,24 @@ def set_style(image_file):
 set_style("family.jpg")
 
 # ==========================================
-# 5. [핵심] 가족 선택 (사이드바 X -> 메인 상단 O)
+# 5. 가족 선택 (메인 상단 배치)
 # ==========================================
-st.markdown("<h2 style='text-align: center; color: white; text-shadow: 1px 1px 2px black;'>👨‍👩‍👦‍👦 누구와 대화할까요?</h2>", unsafe_allow_html=True)
+# 제목에도 그림자 추가해서 잘 보이게
+st.markdown("<h2 style='text-align: center; color: white; text-shadow: 2px 2px 4px #000000;'>👨‍👩‍👦‍👦 누구와 대화할까요?</h2>", unsafe_allow_html=True)
 
-# [수정됨] 사이드바를 없애고 메인 화면에 '가로형'으로 배치
 selected_user = st.radio(
-    "가족 선택", # 라벨은 CSS로 숨김
+    "가족 선택",
     ("아버지 (손기혁)", "어머니 (김영숙)", "막내 (손준호)"),
     index=0,
-    horizontal=True # 가로로 배치 (모바일에서 보기 좋음)
+    horizontal=True
 )
 
 user_name = selected_user.split('(')[1].replace(')', '')
 
 # ==========================================
-# 6. [업그레이드] 성격 부여 (사람 같은 조언)
+# 6. 페르소나 (완벽한 조언 + 따뜻함)
 # ==========================================
 def get_system_instruction(user):
-    # [공통 페르소나]
     base = """
     너는 딱딱한 기계가 아니라, 이 가족을 진심으로 아끼고 사랑하는 따뜻한 '가족 구성원' 같은 존재야.
     
@@ -191,7 +204,6 @@ if "chat_session" not in st.session_state or st.session_state.chat_session is No
             model = genai.GenerativeModel(best_model_name, system_instruction=get_system_instruction(selected_user))
             st.session_state.chat_session = model.start_chat(history=[])
             
-            # 첫 인사말도 성격에 맞게 살짝 다르게
             if "손기혁" in selected_user:
                 greeting = f"{user_name}님, 오늘도 든든한 하루 보내고 계신가요? 🌿"
             elif "김영숙" in selected_user:
