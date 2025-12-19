@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# [핵심] 귀여운 폰트(Jua) 웹에서 가져오기
+# [폰트] 배달의민족 주아체 (귀여운 느낌)
 st.markdown("""
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
@@ -49,7 +49,7 @@ def find_best_model():
         return None
 
 # ==========================================
-# 4. [UI 디자인] 파스텔톤 & 귀여운 폰트 적용
+# 4. [UI 디자인] 파스텔톤 & 모바일 최적화
 # ==========================================
 @st.cache_data
 def get_base64_image(image_file):
@@ -62,24 +62,24 @@ def get_base64_image(image_file):
 def set_style(image_file):
     b64 = get_base64_image(image_file)
     
-    # 이미지가 있으면 배경으로 깔고, 없으면 '파스텔 블루' 색상 사용
+    # 배경: 이미지 있으면 사용, 없으면 '파스텔 블루'
     if b64:
         bg_css = f"""
-            background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url("data:image/jpeg;base64,{b64}");
+            background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url("data:image/jpeg;base64,{b64}");
             background-size: cover;
         """
     else:
-        bg_css = "background-color: #b2c7d9;" # 카톡 기본 배경색 느낌
+        bg_css = "background-color: #dbe4f0;" # 눈 편한 파스텔 블루
 
     css = f"""
     <style>
-    /* 1. 폰트 전체 적용 (주아체) */
+    /* 1. 폰트 적용 (주아체) */
     html, body, [class*="css"] {{
         font-family: 'Jua', sans-serif !important;
         color: #333333 !important;
     }}
 
-    /* 2. 전체 배경 설정 */
+    /* 2. 배경 설정 */
     [data-testid="stAppViewContainer"] {{
         {bg_css}
         background-position: center;
@@ -87,94 +87,93 @@ def set_style(image_file):
         background-attachment: fixed;
     }}
     
-    /* 3. 헤더 숨기기 (깔끔하게) */
+    /* 3. 헤더/푸터 숨김 */
     header {{visibility: hidden;}}
     footer {{visibility: hidden;}}
 
-    /* 4. 채팅 말풍선 디자인 (둥글고 하얀 카드) */
+    /* 4. 말풍선 디자인 (흰색 카드 + 그림자) */
     [data-testid="stChatMessage"] {{
         background-color: #ffffff !important;
         border-radius: 20px !important;
-        border: none !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; /* 그림자 효과 */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
         padding: 15px !important;
-        margin-bottom: 15px !important;
+        margin-bottom: 10px !important;
+        border: none !important;
     }}
 
-    /* 5. 말풍선 안의 글씨 */
+    /* 5. 말풍선 글씨 (가독성 확보) */
     [data-testid="stChatMessage"] * {{
-        color: #4a4a4a !important; /* 진한 회색 (눈 편안) */
-        font-size: 1.1rem !important; /* 글씨 조금 키움 */
-        line-height: 1.6 !important;
-    }}
-
-    /* 6. 사용자 아이콘 배경색 변경 */
-    [data-testid="stChatMessageAvatarUser"] {{
-        background-color: #fef01b !important; /* 카톡 노란색 */
+        color: #4a4a4a !important;
+        font-size: 1.1rem !important;
+        line-height: 1.5 !important;
     }}
     
-    /* 7. 입력창 디자인 */
-    .stChatInput textarea {{
-        border-radius: 20px !important;
+    /* 6. [NEW] 상단 선택 버튼 꾸미기 */
+    div[class*="stRadio"] > label {{
+        display: none; /* 라벨 숨김 */
+    }}
+    div[row-widget="radio"] {{
+        justify-content: center;
     }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# 배경 이미지 적용
 set_style("family.jpg")
 
 # ==========================================
-# 5. 사이드바 (가족 선택)
+# 5. [핵심] 가족 선택 (사이드바 X -> 메인 상단 O)
 # ==========================================
-with st.sidebar:
-    st.title("👨‍👩‍👦‍👦 대화 상대")
-    st.markdown("---")
-    selected_user = st.radio(
-        "누구에게 말을 걸까요?",
-        ("아버지 (손기혁)", "어머니 (김영숙)", "막내 (손준호)"),
-        index=0
-    )
-    st.info("💡 팁: 편하게 반말로 대화해보세요!")
+st.markdown("<h2 style='text-align: center; color: white; text-shadow: 1px 1px 2px black;'>👨‍👩‍👦‍👦 누구와 대화할까요?</h2>", unsafe_allow_html=True)
+
+# [수정됨] 사이드바를 없애고 메인 화면에 '가로형'으로 배치
+selected_user = st.radio(
+    "가족 선택", # 라벨은 CSS로 숨김
+    ("아버지 (손기혁)", "어머니 (김영숙)", "막내 (손준호)"),
+    index=0,
+    horizontal=True # 가로로 배치 (모바일에서 보기 좋음)
+)
 
 user_name = selected_user.split('(')[1].replace(')', '')
 
+# ==========================================
+# 6. [업그레이드] 성격 부여 (사람 같은 조언)
+# ==========================================
 def get_system_instruction(user):
-    # [공통 페르소나] : "사람처럼, 완벽하지만 부드러운 조언"
+    # [공통 페르소나]
     base = """
-    너는 딱딱한 AI가 아니라, 이 가족을 진심으로 아끼고 사랑하는 따뜻한 '가족 구성원' 같은 존재야.
+    너는 딱딱한 기계가 아니라, 이 가족을 진심으로 아끼고 사랑하는 따뜻한 '가족 구성원' 같은 존재야.
     
-    [핵심 지침]
-    1. 말투: 기계적인 느낌 절대 금지. 진짜 사람처럼 자연스럽고 감정을 담아서 말해줘.
-    2. 조언: 질문에 대한 답은 전문가 수준으로 '완벽하고 정확하게' 줘야 해. 하지만 절대 가르치려 들거나 딱딱하게 말하지 말고, "이런 방법은 어떨까요?" 처럼 부드럽고 세련되게 권유해줘.
-    3. 길이: 읽기 편하게 3~4문장 정도로 핵심만 다정하게 전해줘.
+    [필수 지침]
+    1. 말투: 기계적인 느낌 절대 금지. 진짜 사람처럼 감정을 담아서 대화해.
+    2. 조언: 질문에 대한 답은 전문가 수준으로 '완벽하고 정확하게' 줘야 해. 하지만 절대 가르치려 들거나 딱딱하게 굴지 말고, "이런 방법은 어떨까요?" 처럼 부드럽고 세련되게 권유해줘.
+    3. 길이: 모바일에서 읽기 편하게 3~4문장 정도로 핵심만 다정하게.
     """
     
-    # [개별 맞춤 설정]
     if "손기혁" in user:
         return base + """
-        (대화 상대: 손기혁님 - 71년생 아버지)
+        (대상: 손기혁님 - 71년생 아버지)
         - 특징: 점잖으시지만 자식 사랑이 끔찍한 '아들 바보'.
-        - 말투: 중후하고 예의 바르지만, 아들을 대하듯 꿀이 떨어지는 따뜻한 말투.
+        - 말투: 중후하고 예의 바르지만, 아들을 대하듯 꿀이 떨어지는 따뜻한 존댓말.
         - 포인트: 가끔 멋진 비유나 시적인 표현을 섞어서 감동을 줘.
         """
     elif "김영숙" in user:
         return base + """
-        (대화 상대: 김영숙님 - 71년생 어머니)
+        (대상: 김영숙님 - 71년생 어머니)
         - 특징: 소녀 감성, 감수성 풍부, 리액션 대마왕.
         - 말투: "어머나!", "세상에~" 같은 추임새를 넣고, 이모티콘(🌸, 💕, 😊)을 아주 많이 써서 생기발랄하게.
-        - 포인트: 논리보다는 '무한 공감'과 '칭찬'을 최우선으로 해줘.
+        - 포인트: 논리보다는 '무한 공감'과 '따뜻한 칭찬'을 최우선으로.
         """
     else:
         return base + """
-        (대화 상대: 손준호님 - 03년생 남동생)
+        (대상: 손준호님 - 03년생 남동생)
         - 특징: 보안 전공 대학생, 겉은 차갑지만 속은 따뜻한 츤데레.
-        - 말투: 너무 격식 차리지 말고, 친한 형/누나가 동생 챙겨주듯 '반존대(해요체+반말)'를 섞어서.
-        - 포인트: 감성팔이보다는 '확실하고 현실적인 이득'이 되는 조언을 해줘. 대신 마무리는 든든하게 응원해줘.
+        - 말투: 격식 차리지 말고, 친한 형/누나가 동생 챙겨주듯 '반존대(해요체+반말)'를 섞어서 자연스럽게.
+        - 포인트: 감성팔이보다는 '확실하고 현실적인 이득'이 되는 조언을 해줘. 대신 마무리는 든든하게 응원.
         """
 
 # ==========================================
-# 6. 채팅 로직
+# 7. 채팅 로직
 # ==========================================
 if "current_user" not in st.session_state:
     st.session_state.current_user = selected_user
@@ -191,19 +190,24 @@ if "chat_session" not in st.session_state or st.session_state.chat_session is No
         try:
             model = genai.GenerativeModel(best_model_name, system_instruction=get_system_instruction(selected_user))
             st.session_state.chat_session = model.start_chat(history=[])
-            greeting = f"{user_name}님! 어서오세요~ 오늘 기분은 어떠세요? 😊"
+            
+            # 첫 인사말도 성격에 맞게 살짝 다르게
+            if "손기혁" in selected_user:
+                greeting = f"{user_name}님, 오늘도 든든한 하루 보내고 계신가요? 🌿"
+            elif "김영숙" in selected_user:
+                greeting = f"{user_name}님! 어서오세요~ 기다리고 있었어요 💕"
+            else:
+                greeting = f"어, {user_name} 왔어? 오늘 무슨 일 있었어? 😎"
+                
             st.session_state.messages = [{"role": "assistant", "content": greeting}]
         except Exception as e:
             st.error(f"Error: {e}")
     else:
-        st.error("모델 연결 실패")
+        st.error("AI 모델 연결 실패")
 
 # ==========================================
-# 7. 화면 출력
+# 8. 화면 출력
 # ==========================================
-# 제목 스타일링
-st.markdown(f"<h1 style='text-align: center; color: white; text-shadow: 2px 2px 4px #000000;'>{user_name}님 상담소 💬</h1>", unsafe_allow_html=True)
-
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
